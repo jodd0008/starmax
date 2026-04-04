@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Starmax — Digital Services Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #0a0e1a; color: #fff; min-height: 100vh; max-width: 480px; margin: 0 auto; overflow-x: hidden; }
+
+        /* ===== AUTH PAGES ===== */
+        .auth-page { display: none; min-height: 100vh; padding: 40px 24px; flex-direction: column; align-items: center; justify-content: center; background: #0a0e1a; }
+        .auth-page.active { display: flex; }
+        .logo { text-align: center; margin-bottom: 36px; }
+        .logo .star { font-size: 48px; margin-bottom: 8px; }
+        .logo h1 { font-size: 30px; font-weight: 900; background: linear-gradient(135deg, #00d4ff, #0066ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 3px; }
+        .logo p { color: #4a5a6a; font-size: 13px; margin-top: 6px; letter-spacing: 1px; }
+        .auth-form { width: 100%; max-width: 360px; }
+        .auth-form h2 { font-size: 22px; font-weight: 700; margin-bottom: 24px; color: #e0e8f0; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; color: #6a7a8a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 14px 16px; background: #131929; border: 1px solid #1e2d3d; border-radius: 12px; color: #fff; font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        .form-group input:focus { border-color: #00d4ff; box-shadow: 0 0 0 3px rgba(0,212,255,0.1); }
+        .form-group input::placeholder { color: #3a4a5a; }
+        .btn-primary { width: 100%; padding: 15px; background: linear-gradient(135deg, #00d4ff, #0066ff); border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; letter-spacing: 0.5px; transition: opacity 0.2s; }
+        .btn-primary:active { opacity: 0.85; }
+        .auth-switch { text-align: center; margin-top: 20px; color: #4a5a6a; font-size: 14px; }
+        .auth-switch a { color: #00d4ff; cursor: pointer; font-weight: 600; }
+
+        /* ===== MAIN APP ===== */
+        #mainApp { display: none; }
+        .page { display: none; min-height: calc(100vh - 65px); padding-bottom: 80px; }
+        .page.active { display: block; }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #0d1421; border-top: 1px solid #1a2535; display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; padding: 10px 0 8px; text-align: center; cursor: pointer; color: #3a4a5a; font-size: 11px; font-weight: 500; transition: color 0.2s; }
+        .nav-item.active { color: #00d4ff; }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 3px; }
+
+        /* ===== HOME TAB ===== */
+        .home-hero { background: linear-gradient(180deg, #0d1b2e 0%, #0a0e1a 100%); padding: 24px 20px 20px; text-align: center; border-bottom: 1px solid #1a2535; }
+        .home-brand { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #00d4ff, #0066ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
+        .home-sub { color: #3a4a5a; font-size: 12px; margin-top: 4px; letter-spacing: 1px; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px 16px 10px; }
+        .action-card { background: #131929; border: 1px solid #1e2d3d; border-radius: 16px; padding: 22px 12px 18px; text-align: center; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+        .action-card:active { background: #1a2535; transform: scale(0.97); }
+        .action-icon { font-size: 34px; margin-bottom: 10px; display: block; }
+        .action-label { color: #8a9aaa; font-size: 13px; font-weight: 500; }
+        .search-section { padding: 10px 16px 6px; }
+        .search-label { color: #4a5a6a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .search-input { width: 100%; padding: 12px 16px; background: #131929; border: 1px solid #1e2d3d; border-radius: 10px; color: #fff; font-size: 14px; outline: none; }
+        .search-input::placeholder { color: #3a4a5a; }
+        .pkg-header { display: flex; justify-content: space-between; padding: 8px 16px; color: #3a4a5a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .pkg-item { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #0f1520; cursor: pointer; transition: background 0.15s; }
+        .pkg-item:active { background: #131929; }
+        .pkg-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-right: 14px; flex-shrink: 0; }
+        .pkg-info { flex: 1; }
+        .pkg-name { font-weight: 700; font-size: 14px; }
+        .pkg-sub { color: #4a5a6a; font-size: 12px; margin-top: 2px; }
+        .pkg-right { text-align: right; }
+        .pkg-price { font-weight: 800; font-size: 15px; }
+        .pkg-return { font-size: 12px; color: #00c853; margin-top: 2px; font-weight: 600; }
+
+        /* ===== OPTIONS TAB ===== */
+        .tab-header { padding: 20px 16px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a2535; }
+        .tab-header h2 { font-size: 18px; font-weight: 700; }
+        .history-card { background: #0d1421; border: 1px solid #1a2535; border-radius: 14px; margin: 10px 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .hist-sym { font-weight: 700; font-size: 15px; }
+        .hist-type { color: #4a5a6a; font-size: 12px; margin-top: 3px; }
+        .hist-amt { font-weight: 700; font-size: 15px; color: #00c853; }
+        .hist-status { font-size: 12px; font-style: italic; color: #00c853; margin-top: 3px; }
+        .hist-date { color: #4a5a6a; font-size: 12px; text-align: right; }
+        .empty-state { text-align: center; padding: 70px 20px; color: #3a4a5a; }
+        .empty-icon { font-size: 52px; margin-bottom: 14px; display: block; }
+
+        /* ===== ASSETS TAB ===== */
+        .balance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px 16px 10px; }
+        .bal-card { background: #131929; border: 1px solid #1e2d3d; border-radius: 14px; padding: 18px 16px; }
+        .bal-card.green { background: linear-gradient(135deg, #0a2a12, #0d3518); border-color: #1a5a28; }
+        .bal-card.red { background: linear-gradient(135deg, #2a0a0a, #350d0d); border-color: #5a1a1a; }
+        .bal-val { font-size: 26px; font-weight: 900; }
+        .bal-label { color: #6a7a8a; font-size: 12px; margin-top: 5px; font-weight: 500; }
+        .bal-icon { float: right; font-size: 18px; margin-top: -2px; }
+        .stmt-title { padding: 16px 16px 8px; font-size: 16px; font-weight: 700; }
+        .stmt-hdr { display: flex; justify-content: space-between; padding: 4px 16px 8px; color: #3a4a5a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stmt-card { background: #0d2a15; border: 1px solid #1a4a22; border-radius: 12px; margin: 6px 16px; padding: 14px 16px; }
+        .stmt-card.debit { background: #2a0d0d; border-color: #4a1a1a; }
+        .stmt-card.pending { background: #1a1a0a; border-color: #3a3a0a; }
+        .stmt-inner { display: flex; justify-content: space-between; align-items: flex-start; }
+        .stmt-amt { font-size: 18px; font-weight: 800; }
+        .stmt-type { color: #4a5a6a; font-size: 12px; margin-top: 3px; }
+        .stmt-id { color: #3a4a5a; font-size: 11px; margin-top: 2px; }
+        .stmt-status { font-weight: 700; font-size: 14px; text-align: right; }
+        .stmt-date { color: #4a5a6a; font-size: 12px; margin-top: 3px; text-align: right; }
+
+        /* ===== PROFILE TAB ===== */
+        .profile-top { padding: 28px 20px 20px; text-align: center; }
+        .profile-avatar { width: 72px; height: 72px; background: #131929; border: 2px solid #1e2d3d; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .profile-name { font-size: 18px; font-weight: 700; }
+        .profile-meta { color: #4a5a6a; font-size: 12px; margin-top: 5px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #1a2535; margin: 0 16px 20px; border-radius: 14px; overflow: hidden; }
+        .stat-cell { background: #131929; padding: 16px; text-align: center; }
+        .stat-val { font-size: 20px; font-weight: 800; }
+        .stat-lbl { color: #4a5a6a; font-size: 11px; margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .menu-section { padding: 0 16px 16px; }
+        .menu-title { color: #4a5a6a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 4px; }
+        .menu-group { background: #131929; border-radius: 14px; overflow: hidden; border: 1px solid #1e2d3d; }
+        .menu-row { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #0a0e1a; cursor: pointer; transition: background 0.15s; }
+        .menu-row:last-child { border-bottom: none; }
+        .menu-row:active { background: #1a2535; }
+        .menu-row-left { display: flex; align-items: center; gap: 12px; }
+        .menu-row-icon { font-size: 18px; width: 28px; text-align: center; }
+        .menu-row-text { font-size: 15px; font-weight: 500; }
+        .menu-row-arrow { color: #3a4a5a; font-size: 16px; }
+        .logout-btn { width: calc(100% - 32px); margin: 0 16px 24px; padding: 15px; background: transparent; border: 1px solid #5a1a1a; border-radius: 12px; color: #ff4444; font-size: 15px; font-weight: 700; cursor: pointer; text-align: center; transition: background 0.2s; }
+        .logout-btn:active { background: #2a0a0a; }
+
+        /* ===== MODALS ===== */
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; align-items: flex-end; justify-content: center; }
+        .overlay.active { display: flex; }
+        .modal { background: #0d1421; border-radius: 24px 24px 0 0; padding: 24px 20px 32px; width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto; border-top: 1px solid #1e2d3d; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: #131929; border: none; color: #6a7a8a; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 30px; text-align: center; }
+        .upi-box { background: #131929; border: 1px solid #1e2d3d; border-radius: 16px; padding: 24px 20px; text-align: center; margin-bottom: 16px; }
+        .upi-label { color: #4a5a6a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .upi-id { font-size: 18px; font-weight: 800; color: #00d4ff; margin: 8px 0; }
+        .upi-amount { font-size: 36px; font-weight: 900; color: #fff; margin: 8px 0; }
+        .copy-btn { background: #1e2d3d; border: 1px solid #2a3d4d; color: #00d4ff; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 8px; }
+        .btn-green { width: 100%; padding: 15px; background: linear-gradient(135deg, #00c853, #009a3e); border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+        .btn-blue { width: 100%; padding: 15px; background: linear-gradient(135deg, #00d4ff, #0066ff); border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .btn-blue:active, .btn-green:active { opacity: 0.85; }
+        .info-box { background: #131929; border: 1px solid #1e2d3d; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a2535; font-size: 14px; }
+        .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .info-key { color: #6a7a8a; }
+        .info-val { font-weight: 700; }
+        .modal-input { width: 100%; padding: 14px 16px; background: #131929; border: 1px solid #1e2d3d; border-radius: 12px; color: #fff; font-size: 15px; outline: none; margin-bottom: 14px; }
+        .modal-input:focus { border-color: #00d4ff; }
+        .modal-input::placeholder { color: #3a4a5a; }
+        .modal-label { color: #6a7a8a; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; display: block; }
+        .dep-pkg-item { background: #131929; border: 1px solid #1e2d3d; border-radius: 12px; padding: 16px; margin-bottom: 10px; display: flex; align-items: center; cursor: pointer; transition: background 0.15s; }
+        .dep-pkg-item:active { background: #1a2535; }
+        .ref-code-box { background: #131929; border: 1px solid #1e2d3d; border-radius: 14px; padding: 24px 20px; text-align: center; margin-bottom: 16px; }
+        .ref-code { font-size: 36px; font-weight: 900; color: #00d4ff; letter-spacing: 4px; margin: 8px 0; }
+        .about-text { color: #aabbc0; font-size: 14px; line-height: 1.8; }
+
+        /* ===== TOAST ===== */
+        .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); background: #1a2d3d; color: #fff; padding: 12px 28px; border-radius: 24px; font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.3s; white-space: nowrap; border: 1px solid #2a3d4d; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        ::-webkit-scrollbar { width: 0; }
+    </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== REGISTER PAGE ===== -->
+<div class="auth-page active" id="registerPage">
+    <div style="width:100%;max-width:360px">
+        <div class="logo">
+            <div class="star">⭐</div>
+            <h1>STARBULL</h1>
+            <p>PROFESSIONAL DATA ENTRY SERVICES</p>
+        </div>
+        <div class="auth-form">
+            <h2>Create Account</h2>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="regName" placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="tel" id="regMobile" placeholder="10-digit mobile number" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="regPass" placeholder="Create a password (min 6 chars)">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="regConf" placeholder="Confirm your password">
+            </div>
+            <div class="form-group">
+                <label>Referral Code (Optional)</label>
+                <input type="text" id="regRef" placeholder="Enter referral code if you have one">
+            </div>
+            <button class="btn-primary" onclick="register()">Create Account</button>
+        </div>
+        <div class="auth-switch">Already have an account? <a onclick="showPage('loginPage')">Login here</a></div>
+    </div>
+</div>
+
+<!-- ===== LOGIN PAGE ===== -->
+<div class="auth-page" id="loginPage">
+    <div style="width:100%;max-width:360px">
+        <div class="logo">
+            <div class="star">⭐</div>
+            <h1>STARBULL</h1>
+            <p>WELCOME BACK</p>
+        </div>
+        <div class="auth-form">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="tel" id="loginMobile" placeholder="Enter your mobile number" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPass" placeholder="Enter your password">
+            </div>
+            <button class="btn-primary" onclick="login()">Login</button>
+        </div>
+        <div class="auth-switch">New user? <a onclick="showPage('registerPage')">Register here</a></div>
+    </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp">
+
+    <!-- HOME TAB -->
+    <div class="page active" id="homeTab">
+        <div class="home-hero">
+            <div class="home-brand">⭐ STARBULL</div>
+            <div class="home-sub">PROFESSIONAL DATA ENTRY SERVICES</div>
+        </div>
+        <div class="action-grid">
+            <div class="action-card" onclick="openDepositModal()">
+                <span class="action-icon">💳</span>
+                <div class="action-label">Deposit</div>
+            </div>
+            <div class="action-card" onclick="openWithdrawModal()">
+                <span class="action-icon">💸</span>
+                <div class="action-label">Withdraw</div>
+            </div>
+            <div class="action-card" onclick="openLink('community')">
+                <span class="action-icon">👥</span>
+                <div class="action-label">Community</div>
+            </div>
+            <div class="action-card" onclick="openLink('channel')">
+                <span class="action-icon">📢</span>
+                <div class="action-label">Channel</div>
+            </div>
+        </div>
+        <div class="search-section">
+            <div class="search-label">Find Service Packages</div>
+            <input class="search-input" type="text" placeholder="Search packages..." oninput="filterPkgs(this.value)">
+        </div>
+        <div class="pkg-header">
+            <span>Symbol</span>
+            <span style="margin-left:auto;margin-right:50px;">Value</span>
+            <span>Fuc(%)</span>
+        </div>
+        <div id="pkgList"></div>
+    </div>
+
+    <!-- OPTIONS TAB -->
+    <div class="page" id="optionsTab">
+        <div class="tab-header">
+            <h2>Order History</h2>
+        </div>
+        <div id="historyList"></div>
+    </div>
+
+    <!-- ASSETS TAB -->
+    <div class="page" id="assetsTab">
+        <div class="tab-header">
+            <h2>Financial Records</h2>
+        </div>
+        <div class="balance-grid">
+            <div class="bal-card">
+                <div class="bal-val" id="balAvail">0</div>
+                <div class="bal-label">Available</div>
+            </div>
+            <div class="bal-card">
+                <div class="bal-val">0</div>
+                <div class="bal-label">Salary</div>
+            </div>
+            <div class="bal-card green">
+                <span class="bal-icon">➕</span>
+                <div class="bal-val" id="balDeposit">0</div>
+                <div class="bal-label">Deposit</div>
+            </div>
+            <div class="bal-card red">
+                <span class="bal-icon">➖</span>
+                <div class="bal-val" id="balWithdraw">0</div>
+                <div class="bal-label">Withdraw</div>
+            </div>
+        </div>
+        <div class="stmt-title">Statement History</div>
+        <div class="stmt-hdr"><span>Assets</span><span>Status</span></div>
+        <div id="stmtList"></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="page" id="profileTab">
+        <div class="profile-top">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-name" id="pName"></div>
+            <div class="profile-meta">VIP: 0 &nbsp;|&nbsp; Ref ID: <span id="pRefId" style="color:#00d4ff;font-weight:700;"></span></div>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-cell"><div class="stat-val" id="pAvail">0</div><div class="stat-lbl">Available</div></div>
+            <div class="stat-cell"><div class="stat-val" id="pDeposit">0</div><div class="stat-lbl">Deposit</div></div>
+            <div class="stat-cell"><div class="stat-val" id="pWithdraw">0</div><div class="stat-lbl">Withdrawal</div></div>
+            <div class="stat-cell"><div class="stat-val" id="pCommission">0</div><div class="stat-lbl">Commission</div></div>
+        </div>
+        <div class="menu-section">
+            <div class="menu-title">Options</div>
+            <div class="menu-group">
+                <div class="menu-row" onclick="openAccountModal()">
+                    <div class="menu-row-left"><span class="menu-row-icon">🏦</span><span class="menu-row-text">Account Details (Withdrawal)</span></div>
+                    <span class="menu-row-arrow">↗</span>
+                </div>
+                <div class="menu-row" onclick="openMembersModal()">
+                    <div class="menu-row-left"><span class="menu-row-icon">👥</span><span class="menu-row-text">Member's (Referral)</span></div>
+                    <span class="menu-row-arrow">↗</span>
+                </div>
+                <div class="menu-row" onclick="openAboutModal()">
+                    <div class="menu-row-left"><span class="menu-row-icon">ℹ️</span><span class="menu-row-text">About Us</span></div>
+                    <span class="menu-row-arrow">↗</span>
+                </div>
+                <div class="menu-row" onclick="openSupportModal()">
+                    <div class="menu-row-left"><span class="menu-row-icon">💬</span><span class="menu-row-text">Customer Support</span></div>
+                    <span class="menu-row-arrow">↗</span>
+                </div>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Log Out</button>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')">
+            <span class="nav-icon">🏠</span>Home
+        </div>
+        <div class="nav-item" id="nav-options" onclick="switchTab('options')">
+            <span class="nav-icon">📋</span>Options
+        </div>
+        <div class="nav-item" id="nav-assets" onclick="switchTab('assets')">
+            <span class="nav-icon">💰</span>Assets
+        </div>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+            <span class="nav-icon">👤</span>You
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Deposit Modal -->
+<div class="overlay" id="depositOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Select Package</div>
+            <button class="modal-close" onclick="closeModal('depositOverlay')">✕</button>
+        </div>
+        <div id="depPkgList"></div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="overlay" id="paymentOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Complete Payment</div>
+            <button class="modal-close" onclick="closeModal('paymentOverlay')">✕</button>
+        </div>
+        <!-- Step 1: Pay -->
+        <div style="background:#0a1a2a;border:1px solid #1e2d3d;border-radius:12px;padding:10px 14px;margin-bottom:14px;">
+            <div style="color:#00d4ff;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:6px;">STEP 1 — MAKE PAYMENT</div>
+            <div class="upi-box" style="margin-bottom:10px;">
+                <div class="upi-label">Pay to UPI ID</div>
+                <div class="upi-id">alphapay12345@jio</div>
+                <div class="upi-label" style="margin-top:10px;">Amount</div>
+                <div class="upi-amount" id="payAmt">₹0</div>
+                <button class="copy-btn" onclick="copyUPI()">📋 Copy UPI ID</button>
+            </div>
+            <a id="upiLink" href="#" target="_blank" style="text-decoration:none;">
+                <button class="btn-green" style="margin-bottom:0;">💳 Open UPI / Paytm / PhonePe App</button>
+            </a>
+        </div>
+        <!-- Step 2: Enter UTR -->
+        <div style="background:#0a1a2a;border:1px solid #1e2d3d;border-radius:12px;padding:10px 14px;margin-bottom:14px;">
+            <div style="color:#00d4ff;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">STEP 2 — ENTER UTR / TRANSACTION NUMBER</div>
+            <label class="modal-label">UTR / Transaction Reference Number</label>
+            <input type="text" class="modal-input" id="utrInput" placeholder="Enter 12-digit UTR number from your payment app" style="margin-bottom:6px;">
+            <div style="color:#4a5a6a;font-size:11px;line-height:1.5;">
+                📌 Find UTR in: UPI App → Transaction History → Your payment → UTR/Ref No.
+            </div>
+        </div>
+        <!-- Step 3: Submit -->
+        <button class="btn-blue" onclick="submitOrder()">📤 Submit Order for Verification</button>
+        <div style="color:#3a4a5a;font-size:12px;text-align:center;margin-top:10px;line-height:1.6;">
+            Your order will be verified within <strong style="color:#ffaa00;">30 minutes</strong>. Balance will be credited after verification.
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="overlay" id="withdrawOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Withdraw Funds</div>
+            <button class="modal-close" onclick="closeModal('withdrawOverlay')">✕</button>
+        </div>
+        <div class="info-box">
+            <div class="info-row"><span class="info-key">Available Balance</span><span class="info-val" id="wAvail">₹0</span></div>
+            <div class="info-row"><span class="info-key">Minimum Withdrawal</span><span class="info-val">₹300</span></div>
+        </div>
+        <label class="modal-label">Amount to Withdraw</label>
+        <input type="number" class="modal-input" id="wAmount" placeholder="Enter amount (min ₹300)">
+        <label class="modal-label">Your UPI ID / Bank Account</label>
+        <input type="text" class="modal-input" id="wUPI" placeholder="Enter your UPI ID or account number">
+        <button class="btn-blue" onclick="submitWithdraw()">Submit Withdrawal Request</button>
+    </div>
+</div>
+
+<!-- Account Details Modal -->
+<div class="overlay" id="accountOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Account Details</div>
+            <button class="modal-close" onclick="closeModal('accountOverlay')">✕</button>
+        </div>
+        <label class="modal-label">Account Holder Name</label>
+        <input type="text" class="modal-input" id="accName" placeholder="Your full name">
+        <label class="modal-label">UPI ID</label>
+        <input type="text" class="modal-input" id="accUPI" placeholder="yourname@upi or @bank">
+        <label class="modal-label">Bank Account Number (Optional)</label>
+        <input type="text" class="modal-input" id="accBank" placeholder="Account number">
+        <label class="modal-label">IFSC Code (Optional)</label>
+        <input type="text" class="modal-input" id="accIFSC" placeholder="Bank IFSC code">
+        <button class="btn-blue" onclick="saveAccount()">Save Details</button>
+    </div>
+</div>
+
+<!-- Members / Referral Modal -->
+<div class="overlay" id="membersOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Referral Program</div>
+            <button class="modal-close" onclick="closeModal('membersOverlay')">✕</button>
+        </div>
+        <div class="ref-code-box">
+            <div class="upi-label">Your Referral Code</div>
+            <div class="ref-code" id="refCode"></div>
+            <button class="copy-btn" onclick="copyRefLink()">📋 Copy Referral Link</button>
+        </div>
+        <div class="info-box">
+            <div style="color:#6a7a8a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">How It Works</div>
+            <p style="color:#aabbc0;font-size:14px;line-height:1.7;">Share your referral code with friends. When they register using your code and make a deposit, you automatically earn <strong style="color:#00c853;">₹60 commission</strong> added directly to your balance.</p>
+        </div>
+        <div style="color:#6a7a8a;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Your Referrals</div>
+        <div id="refList" style="color:#3a4a5a;text-align:center;padding:24px;background:#131929;border-radius:12px;">No referrals yet</div>
+    </div>
+</div>
+
+<!-- About Modal -->
+<div class="overlay" id="aboutOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">About Starmax</div>
+            <button class="modal-close" onclick="closeModal('aboutOverlay')">✕</button>
+        </div>
+        <div style="text-align:center;padding:16px 0 8px;">
+            <div style="font-size:40px;">⭐</div>
+            <div style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;margin:6px 0;">STARMAX</div>
+            <div style="color:#4a5a6a;font-size:12px;letter-spacing:1px;">TRUSTED DIGITAL SERVICES PLATFORM</div>
+        </div>
+        <div class="info-box">
+            <p class="about-text">
+                <strong style="color:#00d4ff;">Starmax</strong> is a trusted digital services and agri-commerce platform, established in 2022. We provide verified online work opportunities and digital procurement services to individuals and businesses across India.
+            </p>
+            <br>
+            <p class="about-text">
+                Our platform is trusted by over <strong style="color:#fff;">50,000+ active users</strong> across 22 Indian states. All transactions are processed through secure and verified payment partners.
+            </p>
+            <br>
+            <p class="about-text">
+                At Starmax, we are committed to transparency, fast service delivery, and ensuring that every user has a smooth and rewarding experience on our platform.
+            </p>
+        </div>
+        <div class="info-box">
+            <div class="info-row"><span class="info-key">🏢 Established</span><span class="info-val">2022, India</span></div>
+            <div class="info-row"><span class="info-key">👥 Active Users</span><span class="info-val">50,000+</span></div>
+            <div class="info-row"><span class="info-key">📍 HQ</span><span class="info-val">New Delhi, India</span></div>
+            <div class="info-row"><span class="info-key">⭐ Rating</span><span class="info-val">4.9 / 5.0</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Support Modal -->
+<div class="overlay" id="supportOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Customer Support</div>
+            <button class="modal-close" onclick="closeModal('supportOverlay')">✕</button>
+        </div>
+        <div class="info-box" style="text-align:center;padding:28px 20px;">
+            <div style="font-size:48px;margin-bottom:12px;">💬</div>
+            <p style="color:#aabbc0;font-size:14px;margin-bottom:20px;line-height:1.6;">Our support team is available 24/7 to assist you with any questions, issues, or concerns.</p>
+            <a id="supportTeleLink" href="#" target="_blank" style="text-decoration:none;">
+                <button class="btn-green" style="margin-bottom:0;">📱 Chat on Telegram</button>
+            </a>
+        </div>
+        <div class="info-box">
+            <div class="info-row"><span class="info-key">📱 Telegram</span><span class="info-val">@starmaxsupport</span></div>
+            <div class="info-row"><span class="info-key">⏱ Response</span><span class="info-val">Within 2 hours</span></div>
+            <div class="info-row"><span class="info-key">🕐 Hours</span><span class="info-val">24 / 7</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== CONFIG ==========
+const UPI_ID = 'alphapay12345@jio';
+const UPI_NAME = 'Starmax';
+const TELE_LINK = 'https://t.me/YOUR_CHANNEL';  // ✅ REPLACE with your Telegram link e.g. https://t.me/mychannel
+const TELE_CHANNEL   = TELE_LINK;
+const TELE_COMMUNITY = TELE_LINK;
+const SITE_URL = 'https://yourusername.github.io';   // UPDATE with your GitHub Pages URL
+
+const PACKAGES = [
+    { id:1, name:'Tomato',   nick:'Red Gold',      price:300,  ret:'+5.2%',  icon:'🍅', color:'#6a1a1a' },
+    { id:2, name:'Potato',   nick:'Earth Star',    price:500,  ret:'+6.8%',  icon:'🥔', color:'#5a4a1a' },
+    { id:3, name:'Onion',    nick:'King Onion',    price:800,  ret:'+9.0%',  icon:'🧅', color:'#6a4a10' },
+    { id:4, name:'Carrot',   nick:'Orange Pearl',  price:1000, ret:'+11.5%', icon:'🥕', color:'#6a3a0a' },
+    { id:5, name:'Cabbage',  nick:'Green Ball',    price:1500, ret:'+13.5%', icon:'🥬', color:'#0a5a1a' },
+    { id:6, name:'Peas',     nick:'Green Jewel',   price:2000, ret:'+16.2%', icon:'🫛', color:'#0a4a2a' },
+    { id:7, name:'Brinjal',  nick:'Purple King',   price:3000, ret:'+18.5%', icon:'🍆', color:'#3a0a6a' },
+    { id:8, name:'Broccoli', nick:'Power Green',   price:4000, ret:'+21.0%', icon:'🥦', color:'#0a3a0a' },
+];
+
+// ========== STORAGE ==========
+const getUsers = () => JSON.parse(localStorage.getItem('sb_users') || '{}');
+const saveUsers = u => localStorage.setItem('sb_users', JSON.stringify(u));
+const getCurrent = () => { const m = localStorage.getItem('sb_cur'); return m ? (getUsers()[m] || null) : null; };
+const saveCurrent = u => { const us = getUsers(); us[u.mobile] = u; saveUsers(us); };
+const genRefId = () => Math.floor(100000 + Math.random() * 900000).toString();
+const genTxnId = () => '#' + Math.floor(100000000 + Math.random() * 900000000);
+
+let _payAmt = 0;
+let _payName = '';
+
+// ========== AUTH ==========
+function register() {
+    const name   = document.getElementById('regName').value.trim();
+    const mobile = document.getElementById('regMobile').value.trim();
+    const pass   = document.getElementById('regPass').value;
+    const conf   = document.getElementById('regConf').value;
+    const ref    = document.getElementById('regRef').value.trim().toUpperCase();
+
+    if (!name || !mobile || !pass) return toast('Please fill all required fields');
+    if (mobile.length !== 10 || isNaN(mobile)) return toast('Enter a valid 10-digit mobile number');
+    if (pass.length < 6) return toast('Password must be at least 6 characters');
+    if (pass !== conf) return toast('Passwords do not match');
+
+    const users = getUsers();
+    if (users[mobile]) return toast('This mobile number is already registered');
+
+    let referredBy = null;
+    if (ref) {
+        const refUser = Object.values(users).find(u => u.refId === ref);
+        if (!refUser) return toast('Invalid referral code');
+        referredBy = refUser.mobile;
+        refUser.commission = (refUser.commission || 0) + 60;
+        refUser.available  = (refUser.available  || 0) + 60;
+        refUser.txns = refUser.txns || [];
+        refUser.txns.unshift({ type:'Commission', amount:60, status:'Success', date:nowStr(), id:genTxnId() });
+        users[refUser.mobile] = refUser;
+        saveUsers(users);
+    }
+
+    users[mobile] = {
+        name, mobile, password: pass,
+        refId: genRefId(),
+        available:0, deposit:0, withdrawal:0, commission:0,
+        txns:[], orders:[], accountDetails:{}, referredBy
+    };
+    saveUsers(users);
+    localStorage.setItem('sb_cur', mobile);
+    toast('Account created successfully!');
+    setTimeout(initApp, 600);
+}
+
+function login() {
+    const mobile = document.getElementById('loginMobile').value.trim();
+    const pass   = document.getElementById('loginPass').value;
+    if (!mobile || !pass) return toast('Enter mobile number and password');
+    const users = getUsers();
+    const user  = users[mobile];
+    if (!user) return toast('Mobile number not registered');
+    if (user.password !== pass) return toast('Incorrect password');
+    localStorage.setItem('sb_cur', mobile);
+    toast('Login successful!');
+    setTimeout(initApp, 600);
+}
+
+function logout() {
+    localStorage.removeItem('sb_cur');
+    document.getElementById('mainApp').style.display = 'none';
+    showPage('registerPage');
+    toast('Logged out successfully');
+}
+
+// ========== APP INIT ==========
+function initApp() {
+    const user = getCurrent();
+    if (!user) { showPage('registerPage'); return; }
+    document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+    document.getElementById('mainApp').style.display = 'block';
+    renderPackages(PACKAGES);
+    refreshProfile();
+    renderHistory();
+    renderAssets();
+    switchTab('home');
+}
+
+// ========== NAVIGATION ==========
+function showPage(id) {
+    document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(tab + 'Tab').classList.add('active');
+    document.getElementById('nav-' + tab).classList.add('active');
+    if (tab === 'assets')  renderAssets();
+    if (tab === 'profile') refreshProfile();
+    if (tab === 'options') renderHistory();
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('active');    }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function openLink(type) {
+    window.open(type === 'channel' ? TELE_CHANNEL : TELE_COMMUNITY, '_blank');
+}
+
+// ========== PACKAGES ==========
+function renderPackages(pkgs) {
+    document.getElementById('pkgList').innerHTML = pkgs.map(p => `
+        <div class="pkg-item" onclick="startPayment(${p.id})">
+            <div class="pkg-icon" style="background:${p.color}40;font-size:28px;width:52px;height:52px;border-radius:14px;">${p.icon}</div>
+            <div class="pkg-info">
+                <div class="pkg-name" style="font-size:15px;font-weight:800;">${p.name}/<span style="color:#8a9aaa;font-size:12px;">USDT</span></div>
+                <div class="pkg-sub" style="color:#00d4ff;font-size:12px;margin-top:3px;">${p.nick}</div>
+            </div>
+            <div class="pkg-right">
+                <div class="pkg-price" style="font-size:15px;font-weight:800;">₹${p.price.toLocaleString()}</div>
+                <div class="pkg-return" style="font-size:13px;font-weight:700;color:#00c853;">${p.ret}</div>
+            </div>
+        </div>`).join('');
+}
+
+function filterPkgs(q) {
+    renderPackages(PACKAGES.filter(p =>
+        p.name.toLowerCase().includes(q.toLowerCase()) ||
+        p.nick.toLowerCase().includes(q.toLowerCase())
+    ));
+}
+
+function startPayment(pkgId) {
+    const pkg = PACKAGES.find(p => p.id === pkgId);
+    showPaymentModal(pkg.price, pkg.name);
+}
+
+// ========== DEPOSIT ==========
+function openDepositModal() {
+    document.getElementById('depPkgList').innerHTML = PACKAGES.map(p => `
+        <div class="dep-pkg-item" onclick="closeModal('depositOverlay');showPaymentModal(${p.price},'${p.name}')">
+            <div style="width:46px;height:46px;border-radius:12px;background:${p.color}40;display:flex;align-items:center;justify-content:center;font-size:26px;margin-right:14px;flex-shrink:0;">${p.icon}</div>
+            <div style="flex:1;">
+                <div style="font-weight:800;font-size:15px;">${p.name} <span style="color:#00d4ff;font-size:12px;">${p.nick}</span></div>
+                <div style="color:#4a5a6a;font-size:12px;margin-top:3px;">₹${p.price.toLocaleString()} &nbsp;•&nbsp; <span style="color:#00c853;font-weight:700;">Return: ${p.ret}</span></div>
+            </div>
+        </div>`).join('');
+    openModal('depositOverlay');
+}
+
+function showPaymentModal(amount, name) {
+    _payAmt  = amount;
+    _payName = name || '';
+    document.getElementById('payAmt').textContent = '₹' + amount.toLocaleString();
+    const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=Starmax+${encodeURIComponent(name||'Service')}`;
+    document.getElementById('upiLink').href = upiUrl;
+    openModal('paymentOverlay');
+}
+
+function submitOrder() {
+    if (!_payAmt) return toast('No payment amount set');
+    const utr = document.getElementById('utrInput').value.trim();
+    if (!utr) return toast('Please enter your UTR / Transaction number');
+    if (utr.length < 8) return toast('UTR number must be at least 8 characters');
+
+    const user   = getCurrent();
+    user.txns    = user.txns   || [];
+    user.orders  = user.orders || [];
+    const txnId  = genTxnId();
+    const now    = nowStr();
+
+    // Order is Pending — NO balance credit yet (admin will verify UTR and credit manually)
+    user.txns.unshift({
+        type: 'Deposit', amount: _payAmt, status: 'Pending',
+        date: now, id: txnId, utr: utr
+    });
+    user.orders.unshift({
+        pkg: _payName || 'Package', amount: _payAmt, status: 'Under Review',
+        date: now, id: txnId, utr: utr
+    });
+    saveCurrent(user);
+    closeModal('paymentOverlay');
+    document.getElementById('utrInput').value = '';
+    showOrderBanner(_payAmt, _payName, utr, txnId);
+    renderAssets();
+    refreshProfile();
+    renderHistory();
+    _payAmt = 0; _payName = '';
+}
+
+function showOrderBanner(amount, name, utr, txnId) {
+    const banner = document.createElement('div');
+    banner.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0a1a2a;border:2px solid #00d4ff;border-radius:20px;padding:28px 24px;text-align:center;z-index:9999;width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.85);`;
+    banner.innerHTML = `
+        <div style="font-size:48px;margin-bottom:10px;">🕐</div>
+        <div style="font-size:17px;font-weight:800;color:#00d4ff;margin-bottom:6px;">Order Submitted!</div>
+        <div style="font-size:26px;font-weight:900;color:#fff;margin:10px 0;">₹${amount.toLocaleString()}</div>
+        <div style="color:#6a8aaa;font-size:13px;margin-bottom:6px;">${name || 'Package'} — Under Review</div>
+        <div style="background:#131929;border-radius:8px;padding:10px;margin:12px 0;font-size:12px;">
+            <div style="color:#4a5a6a;">UTR Number</div>
+            <div style="color:#00d4ff;font-weight:700;margin-top:3px;">${utr}</div>
+            <div style="color:#4a5a6a;margin-top:6px;">Order ID</div>
+            <div style="color:#8a9aaa;font-weight:600;margin-top:3px;">${txnId}</div>
+        </div>
+        <div style="color:#ffaa00;font-size:12px;line-height:1.6;margin-bottom:16px;">
+            ⏳ Your order is under verification.<br>Balance will be credited within <strong>30 minutes</strong>.
+        </div>
+        <button onclick="this.parentNode.remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00d4ff,#0066ff);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">OK, Got It</button>
+    `;
+    document.body.appendChild(banner);
+}
+
+function copyUPI() {
+    navigator.clipboard.writeText(UPI_ID).then(() => toast('UPI ID copied!')).catch(() => {
+        const el = document.createElement('textarea');
+        el.value = UPI_ID; document.body.appendChild(el);
+        el.select(); document.execCommand('copy'); document.body.removeChild(el);
+        toast('UPI ID copied!');
+    });
+}
+
+// ========== WITHDRAW ==========
+function openWithdrawModal() {
+    const user = getCurrent();
+    document.getElementById('wAvail').textContent = '₹' + (user.available || 0).toLocaleString();
+    document.getElementById('wAmount').value = '';
+    document.getElementById('wUPI').value = '';
+    openModal('withdrawOverlay');
+}
+
+function submitWithdraw() {
+    const amount = parseFloat(document.getElementById('wAmount').value);
+    const upi    = document.getElementById('wUPI').value.trim();
+    const user   = getCurrent();
+    if (!amount || amount < 300) return toast('Minimum withdrawal amount is ₹300');
+    if (!upi) return toast('Please enter your UPI ID or account number');
+    if (amount > (user.available || 0)) return toast('Insufficient balance');
+    user.available   = (user.available   || 0) - amount;
+    user.withdrawal  = (user.withdrawal  || 0) + amount;
+    user.txns = user.txns || [];
+    user.txns.unshift({ type:'Withdrawal', amount:-amount, status:'Pending', date:nowStr(), id:genTxnId() });
+    saveCurrent(user);
+    closeModal('withdrawOverlay');
+    toast('Withdrawal request submitted!');
+    renderAssets();
+    refreshProfile();
+}
+
+// ========== ACCOUNT ==========
+function openAccountModal() {
+    const user = getCurrent();
+    const acc  = user.accountDetails || {};
+    document.getElementById('accName').value = acc.name  || '';
+    document.getElementById('accUPI').value  = acc.upi   || '';
+    document.getElementById('accBank').value = acc.bank  || '';
+    document.getElementById('accIFSC').value = acc.ifsc  || '';
+    openModal('accountOverlay');
+}
+
+function saveAccount() {
+    const user = getCurrent();
+    user.accountDetails = {
+        name: document.getElementById('accName').value.trim(),
+        upi:  document.getElementById('accUPI').value.trim(),
+        bank: document.getElementById('accBank').value.trim(),
+        ifsc: document.getElementById('accIFSC').value.trim(),
+    };
+    saveCurrent(user);
+    closeModal('accountOverlay');
+    toast('Account details saved!');
+}
+
+// ========== MEMBERS ==========
+function openMembersModal() {
+    const user = getCurrent();
+    document.getElementById('refCode').textContent = user.refId;
+    const users = getUsers();
+    const refs  = Object.values(users).filter(u => u.referredBy === user.mobile);
+    if (refs.length === 0) {
+        document.getElementById('refList').innerHTML = '<span style="color:#3a4a5a;">No referrals yet</span>';
+    } else {
+        document.getElementById('refList').innerHTML = refs.map(r =>
+            `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1a2535;font-size:14px;">
+                <span>${r.name}</span><span style="color:#00c853;font-weight:700;">+₹60</span>
+            </div>`
+        ).join('');
+    }
+    openModal('membersOverlay');
+}
+
+function copyRefLink() {
+    const user = getCurrent();
+    const link = `${SITE_URL}/?ref=${user.refId}`;
+    navigator.clipboard.writeText(link).then(() => toast('Referral link copied!')).catch(() => toast('Code: ' + user.refId));
+}
+
+function openAboutModal() { openModal('aboutOverlay'); }
+function openSupportModal() {
+    document.getElementById('supportTeleLink').href = TELE_LINK;
+    openModal('supportOverlay');
+}
+
+// ========== RENDER ==========
+function renderHistory() {
+    const user = getCurrent();
+    const orders = user.orders || [];
+    if (orders.length === 0) {
+        document.getElementById('historyList').innerHTML =
+            `<div class="empty-state"><span class="empty-icon">📋</span><div>No orders yet</div><div style="font-size:13px;margin-top:8px;">Place an order from the Home tab</div></div>`;
+        return;
+    }
+    document.getElementById('historyList').innerHTML = orders.map(o => {
+        const pkg = PACKAGES.find(p => p.name === o.pkg) || {};
+        const statusColor = o.status === 'Success' ? '#00c853' : o.status === 'Under Review' ? '#ffaa00' : '#ff4444';
+        return `<div class="history-card">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:28px;">${pkg.icon || '📦'}</div>
+                <div>
+                    <div class="hist-sym">${o.pkg}</div>
+                    <div style="color:#00d4ff;font-size:11px;margin-top:2px;">${pkg.nick || 'Order'}</div>
+                    ${o.utr ? `<div style="color:#3a4a5a;font-size:10px;margin-top:2px;">UTR: ${o.utr}</div>` : ''}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div class="hist-amt">₹${Math.abs(o.amount).toLocaleString()}</div>
+                <div style="font-size:12px;font-style:italic;color:${statusColor};margin-top:3px;">${o.status}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderAssets() {
+    const user = getCurrent();
+    document.getElementById('balAvail').textContent   = (user.available   || 0).toLocaleString();
+    document.getElementById('balDeposit').textContent = (user.deposit     || 0).toLocaleString();
+    document.getElementById('balWithdraw').textContent= (user.withdrawal  || 0).toLocaleString();
+    const txns = user.txns || [];
+    if (txns.length === 0) {
+        document.getElementById('stmtList').innerHTML =
+            `<div class="empty-state"><span class="empty-icon">💳</span><div>No transactions yet</div></div>`;
+        return;
+    }
+    document.getElementById('stmtList').innerHTML = txns.map(t => {
+        const isDebit   = t.amount < 0;
+        const isPending = t.status === 'Pending';
+        const cls = isDebit ? 'stmt-card debit' : isPending ? 'stmt-card pending' : 'stmt-card';
+        const color = isDebit ? '#ff4444' : '#00c853';
+        const statusColor = isPending ? '#ffaa00' : (isDebit ? '#ff4444' : '#00c853');
+        return `<div class="${cls}">
+            <div class="stmt-inner">
+                <div>
+                    <div class="stmt-amt" style="color:${color};">${isDebit ? '-' : '+'}₹${Math.abs(t.amount).toLocaleString()}</div>
+                    <div class="stmt-type">${t.type}</div>
+                    <div class="stmt-id">${t.id}</div>
+                    ${t.utr ? `<div style="color:#3a4a5a;font-size:10px;margin-top:2px;">UTR: ${t.utr}</div>` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <div class="stmt-status" style="color:${statusColor};">${t.status}</div>
+                    <div class="stmt-date">${t.date}</div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function refreshProfile() {
+    const user = getCurrent();
+    if (!user) return;
+    document.getElementById('pName').textContent       = user.name;
+    document.getElementById('pRefId').textContent      = user.refId;
+    document.getElementById('pAvail').textContent      = (user.available   || 0).toLocaleString();
+    document.getElementById('pDeposit').textContent    = (user.deposit     || 0).toLocaleString();
+    document.getElementById('pWithdraw').textContent   = (user.withdrawal  || 0).toLocaleString();
+    document.getElementById('pCommission').textContent = (user.commission  || 0).toLocaleString();
+}
+
+// ========== UTILS ==========
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function nowStr() {
+    return new Date().toLocaleString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// Handle referral code from URL
+function checkURLRef() {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref) {
+        const el = document.getElementById('regRef');
+        if (el) el.value = ref.toUpperCase();
+        showPage('registerPage');
+    }
+}
+
+// ========== BOOT ==========
+window.onload = function() {
+    const cur = localStorage.getItem('sb_cur');
+    if (cur && getUsers()[cur]) {
+        initApp();
+    } else {
+        checkURLRef();
+        showPage('registerPage');
+    }
+};
+</script>
+</body>
+</html>
