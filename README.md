@@ -1,1 +1,1 @@
-# starmax
+# starmax.com
